@@ -16,7 +16,7 @@ $(ASSEMBLIES): $(shell find BoundedLayers.Test -name '*.cs')
 test-results/coverage.covcfg: BoundedLayers.Test/coverage.covcfg; mkdir -p test-results; cp $< $@
 test-results/coverage.covcfg.covdb: test-results/coverage.covcfg $(ASSEMBLIES)
 	@. $(MONO)/mono-env;\
-	BABOON_CFG=$(shell pwd)/test-results/coverage.covcfg mono  ../mono-af/XR.Baboon-master/covtool/bin/covem.exe $(MONO)/lib/mono/4.5/nunit-console.exe BoundedLayers.Test/bin/Debug/BoundedLayers.Test.dll -labels
+	BABOON_CFG=$(shell pwd)/test-results/coverage.covcfg mono  ../mono-af/XR.Baboon-master/covtool/bin/covem.exe $(MONO)/lib/mono/4.5/nunit-console.exe -noshadow BoundedLayers.Test/bin/Debug/BoundedLayers.Test.dll -labels
 	@mv TestResult.xml test-results
 
 test-results/html/index.html: test-results/coverage.covcfg.covdb
@@ -28,7 +28,7 @@ test: $(ASSEMBLIES)
 	@echo "\n===> Running tests\n"
 	@mkdir -p test-results/coverage
 	@. $(MONO)/mono-env;\
-	mono $(MONO)/lib/mono/4.5/nunit-console.exe BoundedLayers.Test/bin/Debug/BoundedLayers.Test.dll -labels
+	mono $(MONO)/lib/mono/4.5/nunit-console.exe -noshadow BoundedLayers.Test/bin/Debug/BoundedLayers.Test.dll -labels
 	@mv TestResult.xml test-results
 
 show:

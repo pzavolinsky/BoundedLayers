@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using BoundedLayers.Models;
+using System.Reflection;
 
 namespace BoundedLayers
 {
@@ -89,8 +91,15 @@ namespace BoundedLayers
 			return Expression.Create(_expType, s);
 		}
 
+
 		public IEnumerable<ProjectException> Validate(string solutionPath)
 		{
+			if (!Path.IsPathRooted(solutionPath)) 
+			{
+				var dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+				solutionPath = Path.GetFullPath(Path.Combine(dir, solutionPath));
+			}
+
 			return Validate(new Solution(solutionPath));
 		}
 
@@ -115,11 +124,11 @@ namespace BoundedLayers
 
 				foreach (var referenced in project.References.Select(id => solution.Find(id)))
 				{
-					if (!layers.Any(r => r.Allows(referenced.Name)))
+					if (layers.Any() && !layers.Any(r => r.Allows(referenced.Name)))
 					{
 						res.Add(new LayerViolationException(project, referenced));
 					}
-					if (!components.Any(r => r.Allows(referenced.Name)))
+					if (components.Any() && !components.Any(r => r.Allows(referenced.Name)))
 					{
 						res.Add(new ComponentViolationException(project, referenced));
 					}
@@ -132,6 +141,11 @@ namespace BoundedLayers
 
 	public static class ValidationResultExtensions
 	{
+		public static void AssertThrowsFirst(this IEnumerable<ProjectException> res)
+		{
+			if (res.Any()) throw res.First();
+		}
+
 		public static void Assert(this IEnumerable<ProjectException> res)
 		{
 			res.Assert(s => new Exception(s));

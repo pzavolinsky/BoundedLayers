@@ -44,11 +44,6 @@ namespace BoundedLayers
 		{
 			return s.Split('.').Contains(_part);
 		}
-
-		public override string ToString()
-		{
-			return _part;
-		}
 	}
 
 	public class RegexExpression : IExpression
@@ -63,11 +58,6 @@ namespace BoundedLayers
 		public bool Matches(string s)
 		{
 			return _regex.IsMatch(s);
-		}
-
-		public override string ToString()
-		{
-			return _regex.ToString();
 		}
 	}
 }
