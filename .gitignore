@@ -1,0 +1,8 @@
+packages
+**/bin/*
+**/obj/*
+test-results
+*.userprefs
+pkg
+*.suo
+*.snk
