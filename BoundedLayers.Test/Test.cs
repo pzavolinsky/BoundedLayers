@@ -321,17 +321,6 @@ namespace BoundedLayers.Test
 		}
 
 		[Test]
-		public void ValidateSolution()
-		{
-			Layers.Configure(Expression.Type.RegularExpression)
-				.Layer(@"BoundedLayers.*").HasNoReferences()
-				.Component(@"BoundedLayers").HasNoReferences()
-				.Component(@".*\.Test").References(@"BoundedLayers")
-				.Validate(@"../../../BoundedLayers.sln")
-				.Assert();
-		}
-
-		[Test]
 		public void ValidateInvalidSolution()
 		{
 			Assert.Throws<FileNotFoundException>(() => Layers.Configure().Validate("invalid.sln").Assert());

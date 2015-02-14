@@ -9,7 +9,7 @@
     <licenseUrl>http://www.opensource.org/licenses/mit-license.php</licenseUrl>
     <projectUrl>https://github.com/pzavolinsky/BoundedLayers</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>TODO.</description>
+    <description>A library to validate and enforce layer boundaries in your solutions.</description>
   </metadata>
   <files>
     <file src="bin/Release/BoundedLayers.dll" target="lib/net40/BoundedLayers.dll" />
