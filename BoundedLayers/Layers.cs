@@ -29,150 +29,54 @@ using System.Reflection;
 
 namespace BoundedLayers
 {
-	public interface ILayers
+	/// <summary>
+	/// Layers configuration builder.
+	/// </summary>
+	public static class Layers
 	{
-		Layers.IRule Layer(string name);
-		Layers.IRule Component(string name);
-		IEnumerable<ProjectException> Validate(string solutionPath);
-		IEnumerable<ProjectException> Validate(Solution solution);
-	}
-
-	public class Layers : ILayers
-	{
-		public static ILayers Configure(Expression.Type expType = Expression.Type.AssemblyPart)
+		/// <summary>
+		/// Configure bounded layer rules.
+		/// </summary>
+		/// <param name="expType">Expression type.</param>
+		public static IConfiguration Configure(Expression.Type expType = Expression.Type.NamePart)
 		{
-			return new Layers(expType);
-		}
-
-		private readonly List<Rule> _layerRules = new List<Rule>();
-		private readonly List<Rule> _componentRules = new List<Rule>();
-		private readonly Expression.Type _expType;
-
-		public Layers(Expression.Type expType)
-		{
-			_expType = expType;
-		}
-
-		public IRule Layer(string name)
-		{
-			var rule = new Rule(this, name);
-			_layerRules.Add(rule);
-			return rule;
-		}
-
-		public IRule Component(string name)
-		{
-			var rule = new Rule(this, name);
-			_componentRules.Add(rule);
-			return rule;
-		}
-
-		public interface IRule
-		{
-			ILayers References(params string[] names);
-			ILayers HasNoReferences();
-		}
-
-		public class Rule : IRule
-		{
-			private readonly Layers _layers;
-			private readonly IExpression _nameEx;
-			private readonly List<IExpression> _referenced;
-
-			public Rule(Layers layers, string name)
-			{
-				_layers = layers;
-				_nameEx = layers.CreateExpression(name);
-				_referenced = new List<IExpression>();
-			}
-
-			public ILayers References(params string[] names)
-			{
-				_referenced.AddRange(names.Select(n => _layers.CreateExpression(n)));
-				return _layers;
-			}
-
-			public ILayers HasNoReferences()
-			{
-				return _layers;
-			}
-
-			public bool Matches(string name)
-			{
-				return _nameEx.Matches(name);
-			}
-
-			public bool Allows(string name)
-			{
-				return Matches(name) || _referenced.Any(e => e.Matches(name));
-			}
-		}
-
-		public IExpression CreateExpression(string s)
-		{
-			return Expression.Create(_expType, s);
-		}
-
-
-		public IEnumerable<ProjectException> Validate(string solutionPath)
-		{
-			if (!Path.IsPathRooted(solutionPath)) 
-			{
-				var dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-				solutionPath = Path.GetFullPath(Path.Combine(dir, solutionPath));
-			}
-
-			return Validate(new Solution(solutionPath));
-		}
-
-		public IEnumerable<ProjectException> Validate(Solution solution)
-		{
-			var res = new List<ProjectException>();
-
-			foreach (var project in solution.Projects)
-			{
-				// verify layer rules
-				var layers = _layerRules.Where(r => r.Matches(project.Name)).ToArray();
-				var components = _componentRules.Where(r => r.Matches(project.Name)).ToArray();
-
-				if (!layers.Any()) 
-				{
-					res.Add(new UnknownLayerException(project));
-				}
-				if (!components.Any()) 
-				{
-					res.Add(new UnknownComponentException(project));
-				}
-
-				foreach (var referenced in project.References.Select(id => solution.Find(id)))
-				{
-					if (layers.Any() && !layers.Any(r => r.Allows(referenced.Name)))
-					{
-						res.Add(new LayerViolationException(project, referenced));
-					}
-					if (components.Any() && !components.Any(r => r.Allows(referenced.Name)))
-					{
-						res.Add(new ComponentViolationException(project, referenced));
-					}
-				}
-			}
-
-			return res;
+			return new Configuration(expType);
 		}
 	}
 
+	/// <summary>
+	/// Validation result extensions.
+	/// </summary>
 	public static class ValidationResultExtensions
 	{
+		/// <summary>
+		/// Asserts that the validation was successful, and if the validation failed
+		/// throws the first exception in the error list.
+		/// </summary>
+		/// <param name="res">Validation result.</param>
 		public static void AssertThrowsFirst(this IEnumerable<ProjectException> res)
 		{
 			if (res.Any()) throw res.First();
 		}
 
+		/// <summary>
+		/// Asserts that the validation was successful, and if the validation failed
+		/// throws a System.Exception with the concatenated validation error messages.
+		/// </summary>
+		/// <param name="res">Validation result.</param>
 		public static void Assert(this IEnumerable<ProjectException> res)
 		{
 			res.Assert(s => new Exception(s));
 		}
 
+		/// <summary>
+		/// Asserts that the validation was successful, and if the validation failed
+		/// throws a T (exception) with the concatenated validation error messages.
+		/// </summary>
+		/// <param name="res">Validation result.</param>
+		/// <param name="ctor">A constructor delegate that takes the concatenated
+		/// validation error messages and returns the new exception of type T.</param>
+		/// <typeparam name="T">The exception type.</typeparam>
 		public static void Assert<T>(this IEnumerable<ProjectException> res, Func<string, T> ctor) where T : Exception
 		{
 			if (!res.Any()) return;

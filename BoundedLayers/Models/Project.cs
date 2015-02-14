@@ -28,14 +28,29 @@ using System.Xml.Linq;
 
 namespace BoundedLayers.Models
 {
+	/// <summary>
+	/// Project model.
+	/// </summary>
 	public class Project
 	{
 		private readonly string _id;
 		private readonly string _name;
 		private readonly List<string> _references;
 
+		/// <summary>
+		/// Loads a project from the specified path.
+		/// </summary>
+		/// <param name="id">Project id, as defined in the solution file.</param>
+		/// <param name="name">Project name.</param>
+		/// <param name="path">Project absolute path.</param>
 		public Project(string id, string name, string path) : this(id, name, LoadReferences(path)) {}
 
+		/// <summary>
+		/// Loads a project from the specified references.
+		/// </summary>
+		/// <param name="id">Project id, as defined in the solution file.</param>
+		/// <param name="name">Project name.</param>
+		/// <param name="references">List of referenced project ids.</param>
 		public Project(string id, string name, IEnumerable<string> references)
 		{
 			_id = id;
@@ -43,9 +58,22 @@ namespace BoundedLayers.Models
 			_references = references.ToList();
 		}
 
-
+		/// <summary>
+		/// Gets the id.
+		/// </summary>
+		/// <value>The id.</value>
 		public string Id { get { return _id; } }
+
+		/// <summary>
+		/// Gets the name.
+		/// </summary>
+		/// <value>The name.</value>
 		public string Name { get { return _name; } }
+
+		/// <summary>
+		/// Gets the referenced project ids.
+		/// </summary>
+		/// <value>The referenced project ids.</value>
 		public IEnumerable<string> References { get { return _references; } }
 
 		private static List<string> LoadReferences(string path)

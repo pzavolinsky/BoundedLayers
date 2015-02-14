@@ -82,7 +82,7 @@ bump:
 .PHONY: release
 
 SOURCES:=$(shell find -type f -path './BoundedLayers*' -not -path '*/bin/*' -not -path '*/obj/*' -not -name '*.nuspec')
-RELEASE_FILES:=$(shell find -type d -path './BoundedLayers*' -prune -printf "%f/bin/Release/%f.dll\n")
+RELEASE_FILES:=BoundedLayers/bin/Release/BoundedLayers.dll
 release: $(RELEASE_FILES)
 
 

@@ -28,22 +28,44 @@ using System.Collections.Generic;
 
 namespace BoundedLayers.Models
 {
+	/// <summary>
+	/// Solution model.
+	/// </summary>
 	public class Solution
 	{
 		private static readonly Regex _projectRegex = new Regex(@"Project\(.*=([^,]*),([^,]*\.csproj"" *),(.*)");
 		private readonly List<Project> _projects;
 		private readonly IDictionary<string, Project> _projectMap;
 
+		/// <summary>
+		/// Loads a solution from the specified path.
+		/// </summary>
+		/// <param name="path">Absoulte solution path, or relative
+		/// solution path computed relative to the directory containing 
+		/// the BoundedLayers.dll assembly (usually bin/Debug).</param>
 		public Solution(string path) : this(LoadProjects(path)) {}
 
+		/// <summary>
+		/// Loads a solution from the specified projects.
+		/// </summary>
+		/// <param name="projects">Projects.</param>
 		public Solution(IEnumerable<Project> projects)
 		{
 			_projects = projects.ToList();
 			_projectMap = _projects.ToDictionary(p => p.Id);
 		}
 
+		/// <summary>
+		/// Gets the projects.
+		/// </summary>
+		/// <value>The projects.</value>
 		public IEnumerable<Project> Projects { get { return _projects; } }
 
+		/// <summary>
+		/// Find a project by id.
+		/// </summary>
+		/// <param name="id">Project id.</param>
+		/// <returns>Project</returns>
 		public Project Find(string id)
 		{
 			return _projectMap[id];

@@ -24,44 +24,107 @@ using System;
 
 namespace BoundedLayers.Models
 {
+	/// <summary>
+	/// Base class for project exceptions.
+	/// </summary>
 	public class ProjectException : Exception
 	{
+		/// <summary>
+		/// Initializes a new instance of the <see cref="BoundedLayers.Models.ProjectException"/> class.
+		/// </summary>
+		/// <param name="project">The misconfigured project.</param>
+		/// <param name="message">The exception message.</param>
 		public ProjectException(Project project, string message) : base(message)
 		{
 			Project = project;
 		}
+
+		/// <summary>
+		/// Gets the misconfigured project.
+		/// </summary>
+		/// <value>The project.</value>
 		public Project Project { get; private set; }
 	}
 
+	/// <summary>
+	/// Unknown layer exception, thrown when a project does not match any of
+	/// the defined layers.
+	/// </summary>
 	public class UnknownLayerException : ProjectException
 	{
+		/// <summary>
+		/// Initializes a new instance of the <see cref="BoundedLayers.Models.UnknownLayerException"/> class.
+		/// </summary>
+		/// <param name="project">The misconfigured project.</param>
 		public UnknownLayerException(Project project)
 			: base(project, string.Format("Unknown layer: {0}", project.Name)) {}
 	}
 
+	/// <summary>
+	/// Unknown component exception, thrown when a project does not match any
+	/// of the defined components.
+	/// </summary>
 	public class UnknownComponentException : ProjectException
 	{
+		/// <summary>
+		/// Initializes a new instance of the <see cref="BoundedLayers.Models.UnknownComponentException"/> class.
+		/// </summary>
+		/// <param name="project">The misconfigured project.</param>
 		public UnknownComponentException(Project project)
 			: base(project, string.Format("Unknown component: {0}", project.Name)) {}
 	}
 
+	/// <summary>
+	/// Base class for project reference exceptions.
+	/// </summary>
 	public class ReferenceException : ProjectException
 	{
+		/// <summary>
+		/// Initializes a new instance of the <see cref="BoundedLayers.Models.ReferenceException"/> class.
+		/// </summary>
+		/// <param name="project">The misconfigured project.</param>
+		/// <param name="referenced">The offending project reference.</param>
+		/// <param name="message">The exception message.</param>
 		public ReferenceException(Project project, Project referenced, string message) : base(project, message)
 		{
 			Referenced = referenced;
 		}
+
+		/// <summary>
+		/// Gets the referenced project.
+		/// </summary>
+		/// <value>The referenced project.</value>
 		public Project Referenced { get; private set; }
 	}
 
+	/// <summary>
+	/// Layer violation exception, thrown when a project reference that
+	/// crosses layer boundaries is not defined in the list of allowed
+	/// layer references.
+	/// </summary>
 	public class LayerViolationException : ReferenceException
 	{
+		/// <summary>
+		/// Initializes a new instance of the <see cref="BoundedLayers.Models.LayerViolationException"/> class.
+		/// </summary>
+		/// <param name="project">The misconfigured project.</param>
+		/// <param name="referenced">The offending project reference.</param>
 		public LayerViolationException(Project project, Project referenced)
 			: base(project, referenced, string.Format("Layer violation: {0} cannot refer to {1}", project.Name, referenced.Name)) {}
 	}
 
+	/// <summary>
+	/// Component violation exception, thrown when a project reference that
+	/// crosses component boundaries is not defined in the list of allowed
+	/// component references.
+	/// </summary>
 	public class ComponentViolationException : ReferenceException
 	{
+		/// <summary>
+		/// Initializes a new instance of the <see cref="BoundedLayers.Models.ComponentViolationException"/> class.
+		/// </summary>
+		/// <param name="project">The misconfigured project.</param>
+		/// <param name="referenced">The offending project reference.</param>
 		public ComponentViolationException(Project project, Project referenced)
 			: base(project, referenced, string.Format("Component violation: {0} cannot refer to {1}", project.Name, referenced.Name)) {}
 	}
