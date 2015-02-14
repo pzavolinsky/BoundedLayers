@@ -22,7 +22,7 @@ Description
 
 To see BoundedLayers in action we first need to introduce a hypothetical solution with multiple layer boundaries, so here it goes.
 
-Imagine you have a solution composed of different apps (or bounded contexts). These apps can be anything from web services, web sites, worker services, command-line apps, etc. Each app has more or less the same structure, a "Core" project for business logic, an "Infrastructure" project for extrnal service and database access, a "Hosting" project for hosting strategies, a "Test" project for your unit test, etc.
+Imagine you have a solution composed of different apps (or bounded contexts). These apps can be anything from web services, web sites, worker services, command-line apps, etc. Each app has more or less the same structure, a "Core" project for business logic, an "Infrastructure" project for external service and database access, a "Hosting" project for hosting strategies, a "Test" project for your unit test, etc.
 
 Eventually patterns of reusability start to emerge in you apps so you create shared libraries for each project, that is, a "Shared.Core", a "Shared.Infrastructure", "Shared.Hosting", "Shared.Test", etc.
 
@@ -63,7 +63,7 @@ Using BoundedLayers this can be specified and enforced as:
     .Assert();
 ```
 
-Where ```solutionPath``` can be either an absolute solution path or a solution path relative to the location of the BoundedLayers.dll assembly (i.e. the ```OutputPath``  of your project).
+Where ```solutionPath``` can be either an absolute solution path or a solution path relative to the location of the BoundedLayers.dll assembly (i.e. the ```OutputPath``` of your project).
 
 Ideally you could include this code in a unit test, as in [BoundedLayers.Test/SolutionTest.cs](https://github.com/pzavolinsky/BoundedLayers/tree/master/BoundedLayers.Test/SolutionTest.cs).
 
@@ -74,3 +74,14 @@ Layers, components and project references can be specified using the following m
 - ```Expression.Type.NamePart```: Matches any part of an project name, where project name parts are the strings delimited by dots. For example, System.Web.Http contains the following parts: "System", "Web" and "Http". This is the default expression strategy.
 - ```Expression.Type.RegularExpression```: Uses regular expressions to match project names. Note that the regular expressions have implicit boundaries (```^``` and ```$```) so the expression "Shared" is actually "^Shared$".
 
+You can specify the expression strategy as an argument to the ```Layers.Configure()``` method, for example:
+
+```C#
+  Layers.Configure(Expression.Type.RegularExpression)
+    .Layer(@"BoundedLayers.*").HasNoReferences()         // anything that starts with "BoundedLayers."
+    .Component(@"BoundedLayers").HasNoReferences()       // only the "BoundedLayers" project
+    .Component(@".*\.Test").References(@"BoundedLayers") // anything that ends with ".Test" ...
+                                                         // ... can reference "BoundedLayers"
+    .Validate(solutionPath)
+    .Assert();
+```
