@@ -52,7 +52,7 @@ namespace BoundedLayers.Models
 		public Solution(IEnumerable<Project> projects)
 		{
 			_projects = projects.ToList();
-			_projectMap = _projects.ToDictionary(p => p.Id);
+			_projectMap = _projects.ToDictionary(p => p.Id.ToLowerInvariant());
 		}
 
 		/// <summary>
@@ -68,7 +68,7 @@ namespace BoundedLayers.Models
 		/// <returns>Project</returns>
 		public Project Find(string id)
 		{
-			return _projectMap[id];
+			return _projectMap[id.ToLowerInvariant()];
 		}
 
 		private static List<Project> LoadProjects(string path)
