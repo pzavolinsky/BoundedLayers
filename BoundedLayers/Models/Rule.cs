@@ -38,6 +38,11 @@ namespace BoundedLayers.Models
 		IConfiguration References(params string[] names);
 
 		/// <summary>
+		/// Specify that the project can reference any other project.
+		/// </summary>
+		IConfiguration ReferencesAnything();
+
+		/// <summary>
 		/// Specify that the project has no references.
 		/// </summary>
 		IConfiguration HasNoReferences();
@@ -68,6 +73,13 @@ namespace BoundedLayers.Models
 		public IConfiguration References(params string[] names)
 		{
 			_referenced.AddRange(names.Select(n => _configuration.CreateExpression(n)));
+			return _configuration;
+		}
+
+		/// <see cref="BoundedLayers.Models.IRule.ReferencesAnything"/>
+		public IConfiguration ReferencesAnything()
+		{
+			_referenced.Add(new TrueExpression());
 			return _configuration;
 		}
 

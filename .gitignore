@@ -6,3 +6,4 @@ test-results
 pkg
 *.suo
 *.snk
+TestResult.xml

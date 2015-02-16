@@ -109,8 +109,10 @@ namespace BoundedLayers.Models
 		{
 			if (!Path.IsPathRooted(solutionPath)) 
 			{
-				var dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-				solutionPath = Path.GetFullPath(Path.Combine(dir, solutionPath));
+				var codeBaseUrl = new Uri(Assembly.GetExecutingAssembly().CodeBase);
+				var codeBasePath = Uri.UnescapeDataString(codeBaseUrl.AbsolutePath);
+				var dirPath = Path.GetDirectoryName(codeBasePath);
+				solutionPath = Path.Combine(dirPath, solutionPath);
 			}
 
 			return Validate(new Solution(solutionPath));

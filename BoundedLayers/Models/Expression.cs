@@ -61,7 +61,13 @@ namespace BoundedLayers.Models
 		public static IExpression Create(Expression.Type type, string pattern)
 		{
 			if (type == Type.RegularExpression)
+			{
 				return new RegexExpression(pattern);
+			}
+			if (pattern.StartsWith("r:"))
+			{
+				return new RegexExpression(pattern.Substring(2));
+			}
 			return new NamePartExpression(pattern);
 		}
 	}
@@ -114,5 +120,18 @@ namespace BoundedLayers.Models
 			return _regex.IsMatch(name);
 		}
 	}
+
+	/// <summary>
+	/// This expression always matches.
+	/// </summary>
+	public class TrueExpression : IExpression
+	{
+		/// <see cref="BoundedLayers.Models.IExpression.Matches"/>
+		public bool Matches(string name)
+		{
+			return true;
+		}
+	}
+
 }
 

@@ -162,6 +162,37 @@ namespace BoundedLayers.Test
 		}
 
 		[Test]
+		public void ReferenceAnything()
+		{
+			//
+			// +-------------+
+			// | Shared.Core |
+			// +-------------+
+			//        ^
+			//        +----------*----------+
+			//                              |
+			//                       +-------------+
+			//                       |  App.Test   |
+			//                       +-------------+
+			//
+			var sharedCore = CreateProject("Shared.Core");
+			var appTest    = CreateProject("App.Test"   , sharedCore.Id);
+
+			var solution = new Solution(new Project[] {
+				sharedCore,
+				appTest
+			});
+
+			Layers.Configure()
+				.Layer("Shared").HasNoReferences()
+				.Layer("App").References("Shared")
+				.Component("Core").HasNoReferences()
+				.Component("Test").ReferencesAnything()
+				.Validate(solution)
+				.AssertThrowsFirst();
+		}
+
+		[Test]
 		public void UnknownLayer()
 		{
 			//
@@ -294,6 +325,21 @@ namespace BoundedLayers.Test
 				.Layer(@"Shared.*").HasNoReferences()
 				.Component(@"Shared").HasNoReferences()
 				.Component(@".*\.Host").References(@"Shared")
+				.Validate(new Solution(new Project[] { sharedCore, sharedHost }))
+				.AssertThrowsFirst();
+		}
+
+		[Test]
+		public void RegexPrefixExpressions()
+		{
+			var sharedCore = CreateProject("Shared");
+			var sharedHost = CreateProject("App.Host", sharedCore.Id);
+
+			Layers.Configure()
+				.Layer("Shared").HasNoReferences()
+				.Layer("App").References("r:Sh.*")
+				.Component("Shared").HasNoReferences()
+				.Component("Host").References("Shared")
 				.Validate(new Solution(new Project[] { sharedCore, sharedHost }))
 				.AssertThrowsFirst();
 		}
