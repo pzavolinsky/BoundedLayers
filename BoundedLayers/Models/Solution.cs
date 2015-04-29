@@ -33,7 +33,7 @@ namespace BoundedLayers.Models
 	/// </summary>
 	public class Solution
 	{
-		private static readonly Regex _projectRegex = new Regex(@"Project\(.*=([^,]*),([^,]*\.csproj"" *),(.*)");
+		private static readonly Regex _projectRegex = new Regex(@"Project\(.*=([^,]*),([^,]*\.[a-z]+proj"" *),(.*)");
 		private readonly List<Project> _projects;
 		private readonly IDictionary<string, Project> _projectMap;
 
