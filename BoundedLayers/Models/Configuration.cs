@@ -46,6 +46,12 @@ namespace BoundedLayers.Models
 		IRule Component(string name);
 
 		/// <summary>
+		/// Define an example.
+		/// </summary>
+		/// <param name="name">Project name.</param>
+		IExample ForExample(string name);
+
+		/// <summary>
 		/// Validate the solution file in the specified path.
 		/// </summary>
 		/// <param name="solutionPath">Solution path.</param>
@@ -94,6 +100,12 @@ namespace BoundedLayers.Models
 			return rule;
 		}
 
+		/// <see cref="BoundedLayers.Models.IConfiguration.ForExample"/>
+		public IExample ForExample(string name)
+		{
+			return new Example(this, name);
+		}
+
 		/// <summary>
 		/// Creates a new expression using the pattern specified.
 		/// </summary>
@@ -121,37 +133,76 @@ namespace BoundedLayers.Models
 		/// <see cref="BoundedLayers.Models.IConfiguration.Validate(Solution)"/>
 		public IEnumerable<ProjectException> Validate(Solution solution)
 		{
-			var res = new List<ProjectException>();
+			return solution
+				.Projects
+				.SelectMany(project =>
+					Validate(project.Name, project.References.Select(id => solution.Find(id).Name).ToArray()));
+		}
 
-			foreach (var project in solution.Projects)
+		/// <summary>
+		/// Validate the specified project reference.
+		/// </summary>
+		/// <param name="project">The project.</param>
+		/// <param name="referenced">The referenced projects.</param>
+		/// <returns>A list of validation exceptions.</returns>
+		public IEnumerable<ProjectException> Validate(string project, params string[] referenced)
+		{
+			var layers = _layerRules.Where(r => r.Matches(project)).ToArray();
+			var components = _componentRules.Where(r => r.Matches(project)).ToArray();
+
+			return Validate (layers, components, project)
+				.Concat (referenced.SelectMany (r => Validate (layers, components, project, r)));
+		}
+
+		/// <summary>
+		/// Validate the specified project reference.
+		/// </summary>
+		/// <param name="project">The project.</param>
+		/// <param name="referenced">The referenced projects.</param>
+		/// <returns>A list of validation exceptions and the rules that allow each reference.</returns>
+		public Tuple<IEnumerable<ProjectException>,IEnumerable<AllowingRules>> ValidateExtended(string project, params string[] referenced)
+		{
+			var layers = _layerRules.Where(r => r.Matches(project)).ToArray();
+			var components = _componentRules.Where(r => r.Matches(project)).ToArray();
+
+			return new Tuple<IEnumerable<ProjectException>, IEnumerable<AllowingRules>> (
+				Validate(layers, components, project),
+				referenced.Select(r => AllowedBy(layers, components, r))
+			);
+		}
+
+
+		private IEnumerable<ProjectException> Validate(Rule[] layers, Rule[] components, string project)
+		{
+			if (!layers.Any())
 			{
-				// verify layer rules
-				var layers = _layerRules.Where(r => r.Matches(project.Name)).ToArray();
-				var components = _componentRules.Where(r => r.Matches(project.Name)).ToArray();
-
-				if (!layers.Any()) 
-				{
-					res.Add(new UnknownLayerException(project));
-				}
-				if (!components.Any()) 
-				{
-					res.Add(new UnknownComponentException(project));
-				}
-
-				foreach (var referenced in project.References.Select(id => solution.Find(id)))
-				{
-					if (layers.Any() && !layers.Any(r => r.Allows(referenced.Name)))
-					{
-						res.Add(new LayerViolationException(project, referenced));
-					}
-					if (components.Any() && !components.Any(r => r.Allows(referenced.Name)))
-					{
-						res.Add(new ComponentViolationException(project, referenced));
-					}
-				}
+				yield return new UnknownLayerException(project);
 			}
+			if (!components.Any()) 
+			{
+				yield return new UnknownComponentException(project);
+			}
+		}
 
-			return res;
+		private IEnumerable<ProjectException> Validate(Rule[] layers, Rule[] components, string project, string referenced)
+		{
+			var allowedBy = AllowedBy(layers, components, referenced);
+			if (layers.Any() && allowedBy.Layer == null)
+			{
+				yield return new LayerViolationException(project, referenced);
+			}
+			if (components.Any() && allowedBy.Component == null)
+			{
+				yield return new ComponentViolationException(project, referenced);
+			}
+		}
+
+		private AllowingRules AllowedBy(Rule[] layers, Rule[] components, string referenced)
+		{
+			return new AllowingRules(
+				layers.FirstOrDefault(r => r.Allows (referenced)),
+				components.FirstOrDefault(r => r.Allows (referenced))
+			);
 		}
 	}
 }

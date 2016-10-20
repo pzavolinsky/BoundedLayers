@@ -34,7 +34,7 @@ namespace BoundedLayers.Models
 		/// </summary>
 		/// <param name="project">The misconfigured project.</param>
 		/// <param name="message">The exception message.</param>
-		public ProjectException(Project project, string message) : base(message)
+		public ProjectException(string project, string message) : base(message)
 		{
 			Project = project;
 		}
@@ -43,7 +43,7 @@ namespace BoundedLayers.Models
 		/// Gets the misconfigured project.
 		/// </summary>
 		/// <value>The project.</value>
-		public Project Project { get; private set; }
+		public string Project { get; private set; }
 	}
 
 	/// <summary>
@@ -56,8 +56,8 @@ namespace BoundedLayers.Models
 		/// Initializes a new instance of the <see cref="BoundedLayers.Models.UnknownLayerException"/> class.
 		/// </summary>
 		/// <param name="project">The misconfigured project.</param>
-		public UnknownLayerException(Project project)
-			: base(project, string.Format("Unknown layer: {0}", project.Name)) {}
+		public UnknownLayerException(string project)
+			: base(project, string.Format("Unknown layer: {0}", project)) {}
 	}
 
 	/// <summary>
@@ -70,8 +70,8 @@ namespace BoundedLayers.Models
 		/// Initializes a new instance of the <see cref="BoundedLayers.Models.UnknownComponentException"/> class.
 		/// </summary>
 		/// <param name="project">The misconfigured project.</param>
-		public UnknownComponentException(Project project)
-			: base(project, string.Format("Unknown component: {0}", project.Name)) {}
+		public UnknownComponentException(string project)
+			: base(project, string.Format("Unknown component: {0}", project)) {}
 	}
 
 	/// <summary>
@@ -85,7 +85,7 @@ namespace BoundedLayers.Models
 		/// <param name="project">The misconfigured project.</param>
 		/// <param name="referenced">The offending project reference.</param>
 		/// <param name="message">The exception message.</param>
-		public ReferenceException(Project project, Project referenced, string message) : base(project, message)
+		public ReferenceException(string project, string referenced, string message) : base(project, message)
 		{
 			Referenced = referenced;
 		}
@@ -94,7 +94,7 @@ namespace BoundedLayers.Models
 		/// Gets the referenced project.
 		/// </summary>
 		/// <value>The referenced project.</value>
-		public Project Referenced { get; private set; }
+		public string Referenced { get; private set; }
 	}
 
 	/// <summary>
@@ -109,8 +109,8 @@ namespace BoundedLayers.Models
 		/// </summary>
 		/// <param name="project">The misconfigured project.</param>
 		/// <param name="referenced">The offending project reference.</param>
-		public LayerViolationException(Project project, Project referenced)
-			: base(project, referenced, string.Format("Layer violation: {0} cannot refer to {1}", project.Name, referenced.Name)) {}
+		public LayerViolationException(string project, string referenced)
+			: base(project, referenced, string.Format("Layer violation: {0} cannot refer to {1}", project, referenced)) {}
 	}
 
 	/// <summary>
@@ -125,7 +125,42 @@ namespace BoundedLayers.Models
 		/// </summary>
 		/// <param name="project">The misconfigured project.</param>
 		/// <param name="referenced">The offending project reference.</param>
-		public ComponentViolationException(Project project, Project referenced)
-			: base(project, referenced, string.Format("Component violation: {0} cannot refer to {1}", project.Name, referenced.Name)) {}
+		public ComponentViolationException(string project, string referenced)
+			: base(project, referenced, string.Format("Component violation: {0} cannot refer to {1}", project, referenced)) {}
+	}
+
+	/// <summary>
+	/// Negative example assertion exception, thrown when an invalid
+	/// project reference is accepted by the current rules.
+	/// </summary>
+	public class NegativeExampleAssertionException : ReferenceException
+	{
+		/// <summary>
+		/// Initializes a new instance of the <see cref="BoundedLayers.Models.NegativeExampleAssertionException"/> class.
+		/// </summary>
+		/// <param name="project">The project.</param>
+		/// <param name="referenced">The project reference.</param>
+		/// <param name="layerRule">The layer rule that allows this invalid reference.</param>
+		/// <param name="componentRule">The component rule that allows this invalid reference.</param>
+		public NegativeExampleAssertionException(string project, string referenced, string layerRule, string componentRule)
+			: base(project, referenced, string.Format(
+				"Example assertion failed: {0} should NOT be able to refer to {1} but the following rules allow the reference: layer={2}, component={3}",
+				project, referenced, layerRule, componentRule))
+		{
+			LayerRule = layerRule;
+			ComponentRule = componentRule;
+		}
+
+		/// <summary>
+		/// Gets the layer rule.
+		/// </summary>
+		/// <value>The layer rule.</value>
+		public string LayerRule { get; }
+
+		/// <summary>
+		/// Gets the component rule.
+		/// </summary>
+		/// <value>The component rule.</value>
+		public string ComponentRule { get;}
 	}
 }

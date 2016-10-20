@@ -3,13 +3,13 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>10.0.0</ProductVersion>
+    <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{4B2B2A6B-2078-42E0-BD4B-8976188B889A}</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>BoundedLayers</RootNamespace>
     <AssemblyName>BoundedLayers</AssemblyName>
-    <ReleaseVersion>1.0.2</ReleaseVersion>
+    <ReleaseVersion>2.0.0</ReleaseVersion>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\BoundedLayers.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
@@ -22,8 +22,8 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
-    <GenerateDocumentation>true</GenerateDocumentation>
     <DelaySign>true</DelaySign>
+    <DocumentationFile>bin\Debug\BoundedLayers.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>true</Optimize>
@@ -31,7 +31,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
-    <GenerateDocumentation>true</GenerateDocumentation>
+    <DocumentationFile>bin\Release\BoundedLayers.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -47,6 +47,8 @@
     <Compile Include="Models\Rule.cs" />
     <Compile Include="Models\Configuration.cs" />
     <Compile Include="Layers.cs" />
+    <Compile Include="Models\Example.cs" />
+    <Compile Include="Models\AllowingRules.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

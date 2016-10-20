@@ -42,13 +42,18 @@ namespace BoundedLayers.Test
 		// |  App.Core   | <---- |  App.Host   |
 		// +-------------+       +-------------+
 		//
-		public void AssertDefaultLayout(Solution solution)
+		public IConfiguration GetDefaultLayout()
 		{
-			Layers.Configure()
+			return Layers.Configure()
 				.Layer("Shared").HasNoReferences()
 				.Layer("App").References("Shared")
 				.Component("Core").HasNoReferences()
-				.Component("Host").References("Core")
+				.Component("Host").References("Core");
+		}
+
+		public void AssertDefaultLayout(Solution solution)
+		{
+			GetDefaultLayout()
 				.Validate(solution)
 				.AssertThrowsFirst();
 		}
@@ -225,7 +230,7 @@ namespace BoundedLayers.Test
 			});
 
 			var e = Assert.Throws<UnknownLayerException>(() => AssertDefaultLayout(solution));
-			Assert.AreEqual(unkCore, e.Project);
+			Assert.AreEqual(unkCore.Name, e.Project);
 		}
 
 		[Test]
@@ -254,7 +259,7 @@ namespace BoundedLayers.Test
 			});
 
 			var e = Assert.Throws<UnknownComponentException>(() => AssertDefaultLayout(solution));
-			Assert.AreEqual(appTest, e.Project);
+			Assert.AreEqual(appTest.Name, e.Project);
 		}
 
 		[Test]
@@ -282,8 +287,8 @@ namespace BoundedLayers.Test
 			});
 
 			var e = Assert.Throws<LayerViolationException>(() => AssertDefaultLayout(solution));
-			Assert.AreEqual(sharedHost, e.Project);
-			Assert.AreEqual(appHost, e.Referenced);
+			Assert.AreEqual(sharedHost.Name, e.Project);
+			Assert.AreEqual(appHost.Name, e.Referenced);
 		}
 
 		[Test]
@@ -311,9 +316,61 @@ namespace BoundedLayers.Test
 			});
 
 			var e = Assert.Throws<ComponentViolationException>(() => AssertDefaultLayout(solution));
-			Assert.AreEqual(sharedCore, e.Project);
-			Assert.AreEqual(sharedHost, e.Referenced);
+			Assert.AreEqual(sharedCore.Name, e.Project);
+			Assert.AreEqual(sharedHost.Name, e.Referenced);
 		}
+
+		[Test]
+		public void Examples()
+		{
+			//
+			// +-------------+        +-------------+
+			// | Shared.Core | <--A-- | Shared.Host |
+			// +-------------+        +-------------+
+			//        ^   ^                  ^
+			//        B   +-------C------+   D
+			//        |                  |   |
+			// +-------------+        +-------------+
+			// |  App.Core   | <--E-- |  App.Host   |
+			// +-------------+        +-------------+
+			//
+			GetDefaultLayout()
+
+				// Positive examples
+				.ForExample("My.Shared.Host").CanReference("My.Shared.Core") // A
+				.ForExample("My.App.Core").CanReference("My.Shared.Core") // B
+				.ForExample("My.App.Host").CanReference("My.Shared.Core", "My.Shared.Host", "My.App.Core") // B, C, D
+
+				// Negative examples
+				.ForExample("My.Shared.Core").CannotReference("My.Shared.Host", "My.App.Core", "My.App.Host") // ~A, ~B, ~C
+				.ForExample("My.Shared.Host").CannotReference("My.App.Host", "My.App.Core") // ~D, ~F (not drawn)
+				.ForExample("My.App.Core").CannotReference("My.App.Host", "My.Shared.Host") // ~E, ~G (not drawn)
+
+				;
+		}
+
+		[Test]
+		public void FailedPositiveExample()
+		{
+			var config = GetDefaultLayout();
+			
+			var e = Assert.Throws<LayerViolationException>(() => config.ForExample("My.Shared.Host").CanReference("My.App.Host"));
+			Assert.AreEqual("My.Shared.Host", e.Project);
+			Assert.AreEqual("My.App.Host", e.Referenced);
+		}
+
+		[Test]
+		public void FailedNegativeExample()
+		{
+			var config = GetDefaultLayout();
+
+			var e = Assert.Throws<NegativeExampleAssertionException>(() => config.ForExample("My.App.Host").CannotReference("My.Shared.Core"));
+			Assert.AreEqual("My.App.Host", e.Project);
+			Assert.AreEqual("My.Shared.Core", e.Referenced);
+			Assert.AreEqual("{'App' can reference ['Shared']}", e.LayerRule);
+			Assert.AreEqual("{'Host' can reference ['Core']}", e.ComponentRule);
+		}
+
 
 		[Test]
 		public void RegexExpressions()
@@ -356,8 +413,8 @@ namespace BoundedLayers.Test
 		[Test]
 		public void AssertionsFailIfErrors()
 		{
-			var first  = new UnknownComponentException(CreateProject("First"));
-			var second = new UnknownLayerException(CreateProject("Second"));
+			var first  = new UnknownComponentException("First");
+			var second = new UnknownLayerException("Second");
 			var errors = new ProjectException[] { first, second };
 
 			Assert.Throws<Exception>(() => errors.Assert());

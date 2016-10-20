@@ -108,6 +108,19 @@ namespace BoundedLayers.Models
 		{
 			return Matches(name) || _referenced.Any(e => e.Matches(name));
 		}
+
+        /// <summary>
+        /// Returns a <see cref="System.String"/> that represents the current <see cref="BoundedLayers.Models.Rule"/>.
+        /// </summary>
+        /// <returns>A <see cref="System.String"/> that represents the current <see cref="BoundedLayers.Models.Rule"/>.</returns>
+        public override string ToString()
+        {
+            return string.Format(
+                "{{'{0}' can reference [{1}]}}",
+                _nameEx,
+                string.Join(", ", _referenced.Select(r => string.Format("'{0}'", r)))
+            );
+        }
 	}
 
 }

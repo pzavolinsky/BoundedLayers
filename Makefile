@@ -3,20 +3,31 @@ all: coverage
 
 # === Config ========================================================= #
 
-MONO:=../mono-custom
-NUGET:=../NuGet.exe
+NUGET:=packages/nuget.exe
+NUNIT:=packages/NUnit.ConsoleRunner.3.5.0/tools/nunit3-console.exe
+
+# === Packages ======================================================= #
+
+$(NUGET):
+	mkdir -p packages
+	curl https://api.nuget.org/downloads/nuget.exe -o $@
+
+$(NUNIT): $(NUGET)
+	cd packages;                          \
+	mono nuget.exe install NUnit;         \
+	mono nuget.exe install NUnit.Runners
+	touch $@
 
 # === Test =========================================================== #
 .PHONY: test show
 
 ASSEMBLIES:=BoundedLayers/bin/Debug/BoundedLayers.dll BoundedLayers.Test/bin/Debug/BoundedLayers.Test.dll
-$(ASSEMBLIES): $(shell find BoundedLayers.Test -name '*.cs')
-	mdtool build -c:Debug
+$(ASSEMBLIES): $(shell find -name '*.cs' | grep -v '/obj/')
+	xbuild BoundedLayers.sln
 
 test-results/coverage.covcfg: BoundedLayers.Test/coverage.covcfg; mkdir -p test-results; cp $< $@
-test-results/coverage.covcfg.covdb: test-results/coverage.covcfg $(ASSEMBLIES)
-	@. $(MONO)/mono-env;\
-	BABOON_CFG=$(shell pwd)/test-results/coverage.covcfg mono  ../mono-af/XR.Baboon-master/covtool/bin/covem.exe $(MONO)/lib/mono/4.5/nunit-console.exe BoundedLayers.Test/bin/Debug/BoundedLayers.Test.dll -labels
+test-results/coverage.covcfg.covdb: test-results/coverage.covcfg $(ASSEMBLIES) $(NUNIT)
+	@BABOON_CFG=$(shell pwd)/test-results/coverage.covcfg mono  ../mono-af/XR.Baboon-master/covtool/bin/covem.exe $(NUNIT) BoundedLayers.Test/bin/Debug/BoundedLayers.Test.dll --labels=All
 	@mv TestResult.xml test-results
 
 test-results/html/index.html: test-results/coverage.covcfg.covdb
@@ -24,27 +35,26 @@ test-results/html/index.html: test-results/coverage.covcfg.covdb
 
 coverage: test-results/html/index.html
 
-test: $(ASSEMBLIES)
+test: $(ASSEMBLIES) $(NUNIT)
 	@echo "\n===> Running tests\n"
 	@mkdir -p test-results/coverage
-	@. $(MONO)/mono-env;\
-	mono $(MONO)/lib/mono/4.5/nunit-console.exe BoundedLayers.Test/bin/Debug/BoundedLayers.Test.dll -labels
+	mono $(NUNIT) BoundedLayers.Test/bin/Debug/BoundedLayers.Test.dll --labels=All
 	@mv TestResult.xml test-results
 
 show:
 	xdg-open test-results/html/index.html
 
 # === Version ======================================================== #
-.PHONY: bump
+.PHONY: bump bump-asm
 VERSION_FILES:=$(shell find -name AssemblyInfo.cs) \
-	$(shell find -name '*.nuspec') \
+	$(shell find -name '*.nuspec')             \
 	$(shell find -name '*.csproj')
-UPD_FILE:=                                                     \
-	diff $$file.new $$file > /dev/null;                        \
-	if [ $$? -ne 0 ]; then                                     \
+UPD_FILE:=                                                             \
+	diff $$file.new $$file > /dev/null;                            \
+	if [ $$? -ne 0 ]; then                                         \
 		echo "  - $$file updated";                             \
 		mv $$file.new $$file;                                  \
-	else                                                       \
+	else                                                           \
 		rm $$file.new;                                         \
 		touch $$file;                                          \
 	fi
@@ -71,12 +81,14 @@ $(VERSION_FILES): BoundedLayers.sln
 	fi
 
 bump:
-	@VER=`$(VERSION_SHELL)`;                                   \
-	echo "Current version: $$VER";                             \
-	echo "New version: ${VERSION}";                            \
-	file=BoundedLayers.sln;                                         \
+	@VER=`$(VERSION_SHELL)`;                                       \
+	echo "Current version: $$VER";                                 \
+	echo "New version: ${VERSION}";                                \
+	file=BoundedLayers.sln;                                        \
 	sed -e "s/version = \([0-9.]*\)/version = ${VERSION}/" $$file > $$file.new; \
 	$(UPD_FILE)
+
+bump-asm: $(VERSION_FILES)
 
 # === Release ======================================================== #
 .PHONY: release
@@ -88,7 +100,7 @@ release: $(RELEASE_FILES)
 
 $(RELEASE_FILES): $(SOURCES)
 	@echo "\n===> Building Release binaries for $@\n"
-	@mdtool build -c:Release -p:`echo $@ | sed -e 's|/bin/.*||'`
+	xbuild /p:Configuration=Release BoundedLayers.sln
 
 # === Package ======================================================== #
 .PHONY: package push-package
@@ -101,11 +113,11 @@ package: $(PKG_BIN)
 $(PKG_BIN) : pkg/%.$(PKG_VER).nupkg : %/package.nuspec $(RELEASE_FILES)
 	@echo "\n===> Packaging binaries: $@ from $<\n"
 	@mkdir -p pkg
-	@cd pkg; ../$(MONO)/bin/mono ../$(NUGET) pack ../$< -Verbosity detailed
+	@cd pkg; mono ../$(NUGET) pack ../$< -Verbosity detailed
 
 push-package: $(PKG_BIN)
 	@for file in $^; do                                        \
-		XDG_CONFIG_HOME=~/.mono $(MONO)/bin/mono $(NUGET) push $$file -Verbosity detailed; \
+		mono $(NUGET) push $$file -Verbosity detailed; \
 	done
 
 # === Clean ========================================================== #

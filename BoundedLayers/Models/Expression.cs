@@ -95,6 +95,15 @@ namespace BoundedLayers.Models
 		{
 			return name.Split('.').Contains(_part);
 		}
+
+        /// <summary>
+        /// Returns a <see cref="System.String"/> that represents the current <see cref="BoundedLayers.Models.NamePartExpression"/>.
+        /// </summary>
+        /// <returns>A <see cref="System.String"/> that represents the current <see cref="BoundedLayers.Models.NamePartExpression"/>.</returns>
+        public override string ToString() 
+        {
+            return _part;
+        }
 	}
 
 	/// <summary>
@@ -119,7 +128,16 @@ namespace BoundedLayers.Models
 		{
 			return _regex.IsMatch(name);
 		}
-	}
+
+        /// <summary>
+        /// Returns a <see cref="System.String"/> that represents the current <see cref="BoundedLayers.Models.RegexExpression"/>.
+        /// </summary>
+        /// <returns>A <see cref="System.String"/> that represents the current <see cref="BoundedLayers.Models.RegexExpression"/>.</returns>
+        public override string ToString() 
+        {
+            return _regex.ToString();
+        }
+    }
 
 	/// <summary>
 	/// This expression always matches.
@@ -131,6 +149,15 @@ namespace BoundedLayers.Models
 		{
 			return true;
 		}
+
+        /// <summary>
+        /// Returns a <see cref="System.String"/> that represents the current <see cref="BoundedLayers.Models.TrueExpression"/>.
+        /// </summary>
+        /// <returns>A <see cref="System.String"/> that represents the current <see cref="BoundedLayers.Models.TrueExpression"/>.</returns>
+        public override string ToString()
+        {
+            return "ReferencesAnything";
+        }
 	}
 
 }
