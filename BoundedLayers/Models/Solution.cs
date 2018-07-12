@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 // 
-using System;
+
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -33,7 +33,7 @@ namespace BoundedLayers.Models
 	/// </summary>
 	public class Solution
 	{
-		private static readonly Regex _projectRegex = new Regex(@"Project\(.*=([^,]*),([^,]*\.[a-z]+proj"" *),(.*)");
+		private static readonly Regex ProjectRegex = new Regex(@"Project\(.*=([^,]*),([^,]*\.[a-z]+proj"" *),(.*)");
 		private readonly List<Project> _projects;
 		private readonly IDictionary<string, Project> _projectMap;
 
@@ -59,27 +59,24 @@ namespace BoundedLayers.Models
 		/// Gets the projects.
 		/// </summary>
 		/// <value>The projects.</value>
-		public IEnumerable<Project> Projects { get { return _projects; } }
+		public IEnumerable<Project> Projects => _projects;
 
-		/// <summary>
+	    /// <summary>
 		/// Find a project by id.
 		/// </summary>
 		/// <param name="id">Project id.</param>
 		/// <returns>Project</returns>
-		public Project Find(string id)
-		{
-			return _projectMap[id.ToLowerInvariant()];
-		}
-
+		public Project Find(string id) => _projectMap[id.ToLowerInvariant()];
+		
 		private static List<Project> LoadProjects(string path)
 		{
 			var pathPrefix = Path.GetDirectoryName(path);
 
 			return File.ReadAllLines(path)
-				.Select(l => _projectRegex.Match(l))
+				.Select(l => ProjectRegex.Match(l))
 				.Where(m => m.Success)
 				.Select(m => new Project(
-						m.Groups[3].Value.Trim().Trim('"'),
+						m.Groups[2].Value.Trim().Trim('"'),
 						m.Groups[1].Value.Trim().Trim('"'),
 						Path.GetFullPath(Path.Combine(pathPrefix, m.Groups[2].Value.Trim().Trim('"')))))
 				.ToList();

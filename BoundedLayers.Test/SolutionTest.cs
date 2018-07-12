@@ -20,23 +20,21 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 // 
-using System;
-using NUnit.Framework;
 using BoundedLayers.Models;
+using Xunit;
 
 namespace BoundedLayers.Test
 {
-	[TestFixture]
 	public class SolutionTest
 	{
-		[Test]
+		[Fact]
 		public void ValidateSolution()
 		{
 			Layers.Configure(Expression.Type.RegularExpression)
 				.Layer(@"BoundedLayers.*").HasNoReferences()
 				.Component(@"BoundedLayers").HasNoReferences()
 				.Component(@".*\.Test").References(@"BoundedLayers")
-				.Validate(@"../../../BoundedLayers.sln")
+				.Validate(@"../../../../BoundedLayers.sln")
 				.Assert();
 		}
 	}

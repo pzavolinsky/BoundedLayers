@@ -20,8 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 // 
-using System;
-using System.IO;
+
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -33,9 +32,7 @@ namespace BoundedLayers.Models
 	/// </summary>
 	public class Project
 	{
-		private readonly string _id;
-		private readonly string _name;
-		private readonly List<string> _references;
+        private readonly List<string> _references;
 
 		/// <summary>
 		/// Loads a project from the specified path.
@@ -53,36 +50,37 @@ namespace BoundedLayers.Models
 		/// <param name="references">List of referenced project ids.</param>
 		public Project(string id, string name, IEnumerable<string> references)
 		{
-			_id = id;
-			_name = name;
+			Id = id;
+			Name = name;
 			_references = references.ToList();
 		}
 
-		/// <summary>
-		/// Gets the id.
-		/// </summary>
-		/// <value>The id.</value>
-		public string Id { get { return _id; } }
+        /// <summary>
+        /// Gets the id.
+        /// </summary>
+        /// <value>The id.</value>
+        public string Id { get; }
 
-		/// <summary>
-		/// Gets the name.
-		/// </summary>
-		/// <value>The name.</value>
-		public string Name { get { return _name; } }
+        /// <summary>
+        /// Gets the name.
+        /// </summary>
+        /// <value>The name.</value>
+        public string Name { get; }
 
-		/// <summary>
-		/// Gets the referenced project ids.
-		/// </summary>
-		/// <value>The referenced project ids.</value>
-		public IEnumerable<string> References { get { return _references; } }
+        /// <summary>
+        /// Gets the referenced project ids.
+        /// </summary>
+        /// <value>The referenced project ids.</value>
+        public IEnumerable<string> References => _references;
 
-		private static List<string> LoadReferences(string path)
+	    private static List<string> LoadReferences(string path)
 		{
 			var root = XDocument.Load(path).Root;
-			var ns = root.Name.Namespace;
-			return root
+			var ns = root?.Name.Namespace;
+			return root?
 				.Descendants(ns + "ProjectReference")
-				.Select(pr => pr.Element(ns + "Project").Value)
+				.Select(pr => pr.Attribute("Include")?.Value)
+			    .Select(pn => pn?.Replace("..\\", string.Empty))
 				.ToList();
 		}
 	}
