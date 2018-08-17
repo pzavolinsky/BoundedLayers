@@ -7,3 +7,4 @@ pkg
 *.suo
 *.snk
 TestResult.xml
+.vs

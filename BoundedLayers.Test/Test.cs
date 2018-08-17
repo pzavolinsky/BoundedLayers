@@ -20,15 +20,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 // 
-using NUnit.Framework;
 using System;
 using BoundedLayers.Models;
-using System.Reflection;
 using System.IO;
+using Xunit;
 
 namespace BoundedLayers.Test
 {
-	[TestFixture]
 	public class Test
 	{
 		//
@@ -51,14 +49,14 @@ namespace BoundedLayers.Test
 				.Component("Host").References("Core");
 		}
 
-		public void AssertDefaultLayout(Solution solution)
+		private void AssertDefaultLayout(Solution solution)
 		{
 			GetDefaultLayout()
 				.Validate(solution)
 				.AssertThrowsFirst();
 		}
 
-		[Test]
+		[Fact]
 		public void NoReferences()
 		{
 			//
@@ -77,7 +75,7 @@ namespace BoundedLayers.Test
 			var appCore    = CreateProject("App.Core"   );
 			var appHost    = CreateProject("App.Host"   );
 
-			var solution = new Solution(new Project[] {
+			var solution = new Solution(new[] {
 				sharedCore, sharedHost,
 				appCore, appHost
 			});
@@ -85,7 +83,7 @@ namespace BoundedLayers.Test
 			AssertDefaultLayout(solution);
 		}
 
-		[Test]
+		[Fact]
 		public void IntraLayerReferences()
 		{
 			//
@@ -104,7 +102,7 @@ namespace BoundedLayers.Test
 			var appCore    = CreateProject("App.Core"   );
 			var appHost    = CreateProject("App.Host"   , appCore.Id);
 
-			var solution = new Solution(new Project[] {
+			var solution = new Solution(new[] {
 				sharedCore, sharedHost,
 				appCore, appHost
 			});
@@ -112,7 +110,7 @@ namespace BoundedLayers.Test
 			AssertDefaultLayout(solution);
 		}
 
-		[Test]
+		[Fact]
 		public void InterLayerReferences()
 		{
 			//
@@ -131,7 +129,7 @@ namespace BoundedLayers.Test
 			var appCore    = CreateProject("App.Core"   , sharedCore.Id);
 			var appHost    = CreateProject("App.Host"   , sharedHost.Id);
 
-			var solution = new Solution(new Project[] {
+			var solution = new Solution(new[] {
 				sharedCore, sharedHost,
 				appCore, appHost
 			});
@@ -139,7 +137,7 @@ namespace BoundedLayers.Test
 			AssertDefaultLayout(solution);
 		}
 
-		[Test]
+		[Fact]
 		public void AllTogether()
 		{
 			//
@@ -158,7 +156,7 @@ namespace BoundedLayers.Test
 			var appCore    = CreateProject("App.Core"   , sharedCore.Id);
 			var appHost    = CreateProject("App.Host"   , sharedCore.Id, sharedHost.Id, appCore.Id);
 
-			var solution = new Solution(new Project[] {
+			var solution = new Solution(new[] {
 				sharedCore, sharedHost,
 				appCore, appHost
 			});
@@ -166,7 +164,7 @@ namespace BoundedLayers.Test
 			AssertDefaultLayout(solution);
 		}
 
-		[Test]
+		[Fact]
 		public void ReferenceAnything()
 		{
 			//
@@ -183,7 +181,7 @@ namespace BoundedLayers.Test
 			var sharedCore = CreateProject("Shared.Core");
 			var appTest    = CreateProject("App.Test"   , sharedCore.Id);
 
-			var solution = new Solution(new Project[] {
+			var solution = new Solution(new[] {
 				sharedCore,
 				appTest
 			});
@@ -197,7 +195,7 @@ namespace BoundedLayers.Test
 				.AssertThrowsFirst();
 		}
 
-		[Test]
+		[Fact]
 		public void UnknownLayer()
 		{
 			//
@@ -223,17 +221,17 @@ namespace BoundedLayers.Test
 			var appHost    = CreateProject("App.Host"   , sharedCore.Id, sharedHost.Id, appCore.Id);
 			var unkCore    = CreateProject("Unk.Core"   , appCore.Id);
 
-			var solution = new Solution(new Project[] {
+			var solution = new Solution(new[] {
 				sharedCore, sharedHost,
 				appCore, appHost,
 				unkCore
 			});
 
 			var e = Assert.Throws<UnknownLayerException>(() => AssertDefaultLayout(solution));
-			Assert.AreEqual(unkCore.Name, e.Project);
+			Assert.Equal(unkCore.Name, e.Project);
 		}
 
-		[Test]
+		[Fact]
 		public void UnknownComponent()
 		{
 			//
@@ -253,16 +251,16 @@ namespace BoundedLayers.Test
 			var appHost = CreateProject("App.Host", sharedCore.Id, sharedHost.Id, appCore.Id);
 			var appTest = CreateProject("App.Test", appHost.Id);
 
-			var solution = new Solution(new Project[] {
+			var solution = new Solution(new[] {
 				sharedCore, sharedHost,
 				appCore, appHost, appTest
 			});
 
 			var e = Assert.Throws<UnknownComponentException>(() => AssertDefaultLayout(solution));
-			Assert.AreEqual(appTest.Name, e.Project);
+			Assert.Equal(appTest.Name, e.Project);
 		}
 
-		[Test]
+		[Fact]
 		public void LayerViolation()
 		{
 			//
@@ -281,17 +279,17 @@ namespace BoundedLayers.Test
 			var appHost = CreateProject("App.Host", appCore.Id);
 			var sharedHost = CreateProject("Shared.Host", sharedCore.Id, appHost.Id);
 
-			var solution = new Solution(new Project[] {
+			var solution = new Solution(new[] {
 				sharedCore, sharedHost,
 				appCore, appHost
 			});
 
 			var e = Assert.Throws<LayerViolationException>(() => AssertDefaultLayout(solution));
-			Assert.AreEqual(sharedHost.Name, e.Project);
-			Assert.AreEqual(appHost.Name, e.Referenced);
+			Assert.Equal(sharedHost.Name, e.Project);
+			Assert.Equal(appHost.Name, e.Referenced);
 		}
 
-		[Test]
+		[Fact]
 		public void ComponentViolation()
 		{
 			//
@@ -310,17 +308,17 @@ namespace BoundedLayers.Test
 			var appCore = CreateProject("App.Core", sharedCore.Id);
 			var appHost = CreateProject("App.Host", appCore.Id, sharedHost.Id);
 
-			var solution = new Solution(new Project[] {
+			var solution = new Solution(new[] {
 				sharedCore, sharedHost,
 				appCore, appHost
 			});
 
 			var e = Assert.Throws<ComponentViolationException>(() => AssertDefaultLayout(solution));
-			Assert.AreEqual(sharedCore.Name, e.Project);
-			Assert.AreEqual(sharedHost.Name, e.Referenced);
+			Assert.Equal(sharedCore.Name, e.Project);
+			Assert.Equal(sharedHost.Name, e.Referenced);
 		}
 
-		[Test]
+		[Fact]
 		public void Examples()
 		{
 			//
@@ -349,30 +347,30 @@ namespace BoundedLayers.Test
 				;
 		}
 
-		[Test]
+		[Fact]
 		public void FailedPositiveExample()
 		{
 			var config = GetDefaultLayout();
 			
 			var e = Assert.Throws<LayerViolationException>(() => config.ForExample("My.Shared.Host").CanReference("My.App.Host"));
-			Assert.AreEqual("My.Shared.Host", e.Project);
-			Assert.AreEqual("My.App.Host", e.Referenced);
+			Assert.Equal("My.Shared.Host", e.Project);
+			Assert.Equal("My.App.Host", e.Referenced);
 		}
 
-		[Test]
+		[Fact]
 		public void FailedNegativeExample()
 		{
 			var config = GetDefaultLayout();
 
 			var e = Assert.Throws<NegativeExampleAssertionException>(() => config.ForExample("My.App.Host").CannotReference("My.Shared.Core"));
-			Assert.AreEqual("My.App.Host", e.Project);
-			Assert.AreEqual("My.Shared.Core", e.Referenced);
-			Assert.AreEqual("{'App' can reference ['Shared']}", e.LayerRule);
-			Assert.AreEqual("{'Host' can reference ['Core']}", e.ComponentRule);
+			Assert.Equal("My.App.Host", e.Project);
+			Assert.Equal("My.Shared.Core", e.Referenced);
+			Assert.Equal("{'App' can reference ['Shared']}", e.LayerRule);
+			Assert.Equal("{'Host' can reference ['Core']}", e.ComponentRule);
 		}
 
 
-		[Test]
+		[Fact]
 		public void RegexExpressions()
 		{
 			var sharedCore = CreateProject("Shared");
@@ -382,11 +380,11 @@ namespace BoundedLayers.Test
 				.Layer(@"Shared.*").HasNoReferences()
 				.Component(@"Shared").HasNoReferences()
 				.Component(@".*\.Host").References(@"Shared")
-				.Validate(new Solution(new Project[] { sharedCore, sharedHost }))
+				.Validate(new Solution(new[] { sharedCore, sharedHost }))
 				.AssertThrowsFirst();
 		}
 
-		[Test]
+		[Fact]
 		public void RegexPrefixExpressions()
 		{
 			var sharedCore = CreateProject("Shared");
@@ -397,11 +395,11 @@ namespace BoundedLayers.Test
 				.Layer("App").References("r:Sh.*")
 				.Component("Shared").HasNoReferences()
 				.Component("Host").References("Shared")
-				.Validate(new Solution(new Project[] { sharedCore, sharedHost }))
+				.Validate(new Solution(new[] { sharedCore, sharedHost }))
 				.AssertThrowsFirst();
 		}
 
-		[Test]
+		[Fact]
 		public void AssertionsPassIfNoErrors()
 		{
 			var noErrors = new ProjectException[0];
@@ -410,7 +408,7 @@ namespace BoundedLayers.Test
 			noErrors.AssertThrowsFirst();
 		}
 
-		[Test]
+        [Fact]
 		public void AssertionsFailIfErrors()
 		{
 			var first  = new UnknownComponentException("First");
@@ -418,12 +416,12 @@ namespace BoundedLayers.Test
 			var errors = new ProjectException[] { first, second };
 
 			Assert.Throws<Exception>(() => errors.Assert());
-			Assert.Throws<AssertionException>(() => errors.Assert(s => new AssertionException(s)));
+			Assert.Throws<InvalidOperationException>(() => errors.Assert(s => new InvalidOperationException(s)));
 			var e = Assert.Throws<UnknownComponentException>(() => errors.AssertThrowsFirst());
-			Assert.AreEqual(first, e);
+			Assert.Equal(first, e);
 		}
 
-		[Test]
+		[Fact]
 		public void ValidateInvalidSolution()
 		{
 			Assert.Throws<FileNotFoundException>(() => Layers.Configure().Validate("invalid.sln").Assert());
